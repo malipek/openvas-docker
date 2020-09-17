@@ -1,0 +1,8 @@
+version: '3'
+services:
+  openvas-docker:
+    build:
+      context: .
+      dockerfile: Docker/openvas.dockerfile
+    image: openvas-docker
+    tty: true
