@@ -6,3 +6,12 @@ services:
       dockerfile: Docker/openvas.dockerfile
     image: openvas-docker
     tty: true
+    depends_on:
+      - openvas-postgres
+    links:
+      - openvas-postgres
+
+  openvas-postgres:
+    image: postgres
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
