@@ -7,9 +7,10 @@ echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/
 RUN cd src && apt-get update && \
 apt-get install -y --no-install-recommends nodejs git gcc cmake make build-essential pkg-config gcc-mingw-w64 libgnutls28-dev \
 heimdal-dev libpopt-dev libglib2.0-dev libgpgme-dev libssh-gcrypt-dev libldap2-dev libhiredis-dev \
-redis-server libxml2-dev libradcli-dev libpcap-dev bison libksba-dev libsnmp-dev python3-pip python3-setuptools \
+# redis-server \
+libxml2-dev libradcli-dev libpcap-dev bison libksba-dev libsnmp-dev python3-pip python3-setuptools \
 python3-wheel python3-dev libpq-dev postgresql-server-dev-11 libical-dev xsltproc libmicrohttpd-dev gettext rsync \
-sudo yarn && \
+sudo yarn postgresql postgresql-contrib && \
 git clone https://github.com/greenbone/openvas-smb && \
 git clone --branch gsa-${VERSION} https://github.com/greenbone/gsa.git && \
 git clone --branch ospd-openvas-${VERSION} https://github.com/greenbone/ospd-openvas.git && \
@@ -56,6 +57,10 @@ cmake cmake-data make shared-mime-info \
 gcc cpp cpp-8 gcc-8 build-essential libc-dev-bin libc6-dev libgcc-8-dev linux-libc-dev manpages manpages-dev \
 git git-man less patch perl perl-modules-5.28 xauth python3-setuptools python3-dev python3-wheel && \
 rm -rf /var/lib/apt/lists/* /var/cache/apt/* && cd .. && rm -fR src
-ADD ./run.sh /usr/local/bin/
-ADD ./redis-openvas.conf /etc/redis/
-CMD ["/usr/local/bin/run.sh"]
+RUN /etc/init.d/postgresql start && sleep 10 && su -c "createuser -DSR root" postgres && \
+su -c "createdb -O root gvmd" postgres && \
+echo "create role dba with superuser noinherit; grant dba to root" | su -c "psql gvmd" postgres && \
+echo 'create extension "uuid-ossp"; create extension "pgcrypto";' | su -c "psql gvmd" postgres && \
+/etc/init.d/postgresql stop && sleep 10
+ADD ./openvas-run.sh /usr/local/bin/
+CMD ["/usr/local/bin/openvas-run.sh"]

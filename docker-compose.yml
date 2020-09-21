@@ -1,4 +1,11 @@
-version: '3'
+version: '3.5'
+
+x-redis-socket:
+  &redis-socket
+  type: bind
+  source: ./sockets/redis
+  target: /run/redis-openvas
+
 services:
   openvas-docker:
     build:
@@ -7,11 +14,14 @@ services:
     image: openvas-docker
     tty: true
     depends_on:
-      - openvas-postgres
-    links:
-      - openvas-postgres
+      - openvas-redis
+    volumes:
+      - <<: *redis-socket
 
-  openvas-postgres:
-    image: postgres
-    environment:
-      - POSTGRES_HOST_AUTH_METHOD=trust
+  openvas-redis:
+    build:
+      context: .
+      dockerfile: Docker/redis.dockerfile
+    volumes:
+      - <<: *redis-socket
+
